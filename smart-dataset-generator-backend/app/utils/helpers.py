@@ -54,51 +54,85 @@ def format_weather_data(data: Dict[str, Any]) -> Dict[str, Any]:
     if not data or "main" not in data:
         return {"error": "Invalid weather data"}
     
-    return {
-        "location": data.get("name", "Unknown"),
-        "country": data.get("sys", {}).get("country", "Unknown"),
-        "temperature": {
-            "current": data.get("main", {}).get("temp", 0),
-            "feels_like": data.get("main", {}).get("feels_like", 0),
-            "min": data.get("main", {}).get("temp_min", 0),
-            "max": data.get("main", {}).get("temp_max", 0)
-        },
-        "humidity": data.get("main", {}).get("humidity", 0),
-        "pressure": data.get("main", {}).get("pressure", 0),
-        "weather": {
-            "main": data.get("weather", [{}])[0].get("main", "Unknown"),
-            "description": data.get("weather", [{}])[0].get("description", "Unknown"),
-            "icon": data.get("weather", [{}])[0].get("icon", "")
-        },
-        "wind": {
-            "speed": data.get("wind", {}).get("speed", 0),
-            "direction": data.get("wind", {}).get("deg", 0)
-        },
-        "timestamp": datetime.now().isoformat()
-    }
+    # Handle both current weather and forecast data
+    if "list" in data:
+        # This is forecast data
+        formatted_forecast = []
+        for item in data.get("list", []):
+            formatted_forecast.append({
+                "date": item.get("dt_txt", ""),
+                "temperature": item.get("main", {}).get("temp", 0),
+                "feels_like": item.get("main", {}).get("feels_like", 0),
+                "humidity": item.get("main", {}).get("humidity", 0),
+                "pressure": item.get("main", {}).get("pressure", 0),
+                "weather": item.get("weather", [{}])[0].get("description", "Unknown"),
+                "wind_speed": item.get("wind", {}).get("speed", 0),
+                "wind_direction": item.get("wind", {}).get("deg", 0),
+                "location": data.get("city", {}).get("name", "Unknown")
+            })
+        return formatted_forecast
+    else:
+        # This is current weather data
+        return {
+            "location": data.get("name", "Unknown"),
+            "country": data.get("sys", {}).get("country", "Unknown"),
+            "temperature": {
+                "current": data.get("main", {}).get("temp", 0),
+                "feels_like": data.get("main", {}).get("feels_like", 0),
+                "min": data.get("main", {}).get("temp_min", 0),
+                "max": data.get("main", {}).get("temp_max", 0)
+            },
+            "humidity": data.get("main", {}).get("humidity", 0),
+            "pressure": data.get("main", {}).get("pressure", 0),
+            "weather": {
+                "main": data.get("weather", [{}])[0].get("main", "Unknown"),
+                "description": data.get("weather", [{}])[0].get("description", "Unknown"),
+                "icon": data.get("weather", [{}])[0].get("icon", "")
+            },
+            "wind": {
+                "speed": data.get("wind", {}).get("speed", 0),
+                "direction": data.get("wind", {}).get("deg", 0)
+            },
+            "timestamp": datetime.now().isoformat()
+        }
 
 def format_stock_data(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Format stock data for consistent output"""
+    """Format stock data for consistent output.
+    Returns up to 50 most recent entries sorted by date descending.
+    """
     if not data or "Time Series (Daily)" not in data:
         return {"error": "Invalid stock data"}
-    
+
     time_series = data["Time Series (Daily)"]
     formatted_data = []
-    
+
     for date, values in time_series.items():
-        formatted_data.append({
-            "date": date,
-            "open": float(values.get("1. open", 0)),
-            "high": float(values.get("2. high", 0)),
-            "low": float(values.get("3. low", 0)),
-            "close": float(values.get("4. close", 0)),
-            "volume": int(values.get("5. volume", 0))
-        })
-    
+        try:
+            formatted_data.append({
+                "date": date,
+                "open": float(values.get("1. open", 0)),
+                "high": float(values.get("2. high", 0)),
+                "low": float(values.get("3. low", 0)),
+                "close": float(values.get("4. close", 0)),
+                "volume": int(values.get("5. volume", 0))
+            })
+        except Exception:
+            # Skip malformed rows
+            continue
+
+    # Sort by date descending and limit to 50 entries
+    try:
+        formatted_data.sort(key=lambda x: x["date"], reverse=True)
+    except Exception:
+        # If dates are not sortable, keep original order
+        pass
+
+    limited = formatted_data[:50]
+
     return {
         "symbol": data.get("Meta Data", {}).get("2. Symbol", "Unknown"),
         "last_refreshed": data.get("Meta Data", {}).get("3. Last Refreshed", ""),
-        "data": formatted_data[:30]  # Limit to last 30 days
+        "data": limited
     }
 
 def format_news_data(data: Dict[str, Any]) -> Dict[str, Any]:

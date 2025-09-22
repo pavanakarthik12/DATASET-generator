@@ -67,7 +67,7 @@ async def get_weather_forecast(
     city: str = Query(..., description="City name"),
     days: int = Query(5, description="Number of days (1-5)")
 ):
-    """Get weather forecast"""
+    """Get weather forecast. Returns OpenWeather 3-hourly forecast list (up to ~40 entries)."""
     try:
         if days < 1 or days > 5:
             raise HTTPException(status_code=400, detail="Days must be between 1 and 5")
@@ -76,6 +76,7 @@ async def get_weather_forecast(
         if "error" in data:
             raise HTTPException(status_code=400, detail=data["error"])
         
+        # Return raw forecast data with 'list' to match frontend expectations
         return {"success": True, "data": data}
     
     except Exception as e:

@@ -4,7 +4,8 @@ Handles AI-powered suggestions and interactions
 """
 
 from fastapi import APIRouter, HTTPException, Query
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+from pydantic import BaseModel
 import requests
 import json
 from config.config import config
@@ -54,7 +55,7 @@ class ChatbotService:
             }
             
             payload = {
-                "model": "openai/gpt-3.5-turbo",
+                "model": "openai/gpt-4o-mini",
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -108,7 +109,7 @@ class ChatbotService:
             }
             
             payload = {
-                "model": "openai/gpt-3.5-turbo",
+                "model": "openai/gpt-4o-mini",
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": f"Data type: {data_type}, Purpose: {purpose}"}
@@ -160,7 +161,7 @@ class ChatbotService:
             }
             
             payload = {
-                "model": "openai/gpt-3.5-turbo",
+                "model": "openai/gpt-4o-mini",
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": f"Data sample: {data_sample}"}
@@ -191,6 +192,67 @@ class ChatbotService:
 
 # Initialize chatbot service
 chatbot_service = ChatbotService()
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage]
+    model: Optional[str] = None
+
+@router.post("/chat")
+async def chat_completion(payload: ChatRequest):
+    """Generic chat endpoint that accepts a messages array and returns one assistant reply."""
+    try:
+        if not chatbot_service.api_key:
+            raise HTTPException(status_code=400, detail="OpenRouter API key not configured")
+
+        if not payload.messages or len(payload.messages) == 0:
+            raise HTTPException(status_code=400, detail="Messages array is required")
+
+        headers = {
+            "Authorization": f"Bearer {chatbot_service.api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://smart-dataset-generator.com",
+            "X-Title": "Smart Dataset Generator"
+        }
+
+        body = {
+            "model": payload.model or "openai/gpt-4o-mini",
+            "messages": [m.dict() for m in payload.messages],
+            "max_tokens": 800,
+            "temperature": 0.7
+        }
+
+        response = requests.post(
+            f"{chatbot_service.base_url}/chat/completions",
+            headers=headers,
+            json=body,
+            timeout=30
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        assistant = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        model_used = data.get("model", body["model"])
+
+        return {
+            "success": True,
+            "data": {
+                "message": assistant,
+                "model": model_used,
+                "usage": data.get("usage", {}),
+                "created": data.get("created", None)
+            }
+        }
+
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"OpenRouter error: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/suggest")
 async def get_suggestion(
