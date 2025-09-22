@@ -78,7 +78,10 @@ const ImagesForm = ({ onDataUpdate, onError, onLoading }) => {
 
   return (
     <div className="form-card" id="images">
-      <h3>Image Data</h3>
+      <h3 className="form-title">
+        <svg className="form-title-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="14" x="3" y="5" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L9 18"/></svg>
+        Image Data
+      </h3>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Search Type:</label>
@@ -188,7 +191,7 @@ const ImagesForm = ({ onDataUpdate, onError, onLoading }) => {
           </>
         )}
 
-        <button type="submit" className="form-button">
+        <button type="submit" className="btn btn-primary btn-images">
           Get Images
         </button>
       </form>

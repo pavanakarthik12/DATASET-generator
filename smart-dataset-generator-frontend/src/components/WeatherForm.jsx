@@ -164,7 +164,10 @@ const WeatherForm = ({ onDataUpdate, onError, onLoading }) => {
 
   return (
     <div className="form-card" id="weather">
-      <h3>Weather Data</h3>
+      <h3 className="form-title">
+        <svg className="form-title-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="M2 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="M12 18v4"/><path d="m16.24 16.24 2.83 2.83"/><path d="M18 12h4"/><path d="m16.24 7.76 2.83-2.83"/><circle cx="12" cy="12" r="3"/></svg>
+        Weather Data
+      </h3>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Search Type:</label>
@@ -268,7 +271,7 @@ const WeatherForm = ({ onDataUpdate, onError, onLoading }) => {
           </>
         )}
 
-        <button type="submit" className="form-button">
+        <button type="submit" className="btn btn-primary btn-weather">
           Get Weather Data
         </button>
       </form>

@@ -132,7 +132,10 @@ const StocksForm = ({ onDataUpdate, onError, onLoading }) => {
 
   return (
     <div className="form-card" id="stocks">
-      <h3>Stock Market Data</h3>
+      <h3 className="form-title">
+        <svg className="form-title-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        Stock Market Data
+      </h3>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Data Type:</label>
@@ -191,7 +194,7 @@ const StocksForm = ({ onDataUpdate, onError, onLoading }) => {
           </div>
         )}
 
-        <button type="submit" className="form-button">
+        <button type="submit" className="btn btn-primary btn-stocks">
           Get Stock Data
         </button>
       </form>
